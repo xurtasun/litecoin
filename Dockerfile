@@ -33,6 +33,8 @@ COPY entrypoint.sh entrypoint.sh
 
 USER litecoin
 
+EXPOSE 9332 9333 
+
 ENTRYPOINT ["/bin/sh", "entrypoint.sh"]
 
 CMD ["litecoind"]
