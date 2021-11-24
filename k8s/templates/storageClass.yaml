@@ -1,0 +1,19 @@
+{{- if .Values.statefulset.volume.aws_ebs_provisioner.enabled }}
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: {{ .Values.environment }}-{{ .Values.project }}-{{ .Values.statefulset.volume.aws_ebs_provisioner.type }}
+  labels:
+    app.kubernetes.io/name: {{.Values.project}}-{{.Values.role}}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    storageclass: {{.Values.project}}-{{.Values.role}}
+    environment: {{.Values.environment}}
+    project: {{.Values.project}}
+    role: {{.Values.role}}
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: {{ .Values.statefulset.volume.aws_ebs_provisioner.type }}
+  fsType: {{ .Values.statefulset.volume.aws_ebs_provisioner.fsType }}
+  zone: {{ .Values.statefulset.volume.aws_ebs_provisioner.zone }}
+{{- end }}

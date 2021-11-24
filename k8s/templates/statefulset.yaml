@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.environment }}-{{ .Values.project }}-{{ .Values.role }}
+  namespace: {{ .Values.environment }}-{{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{.Values.project}}-{{.Values.role}}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    statefulset: {{.Values.project}}-{{.Values.role}}
+    environment: {{.Values.environment}}
+    project: {{.Values.project}}
+    role: {{.Values.role}}
+spec:
+  selector:
+    matchLabels:
+      project: {{.Values.project}}
+      role: {{.Values.role}}
+{{- if .Values.service.enabled }}
+  serviceName: {{ .Values.environment }}-{{ .Values.project }}-svc
+{{- end }}
+  replicas: {{ .Values.statefulset.replicas }}
+  template:
+    metadata:
+      labels:
+        project: {{.Values.project}}
+        role: {{.Values.role}}
+    spec:
+{{- if .Values.statefulset.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.statefulset.terminationGracePeriodSeconds }}
+{{- end }}
+      containers:
+      - name: {{ .Values.project }}-{{ .Values.role }}
+        image: {{ .Values.statefulset.image.name }}:{{ .Values.statefulset.image.tag }}
+{{- if .Values.statefulset.ports }}
+        ports:
+{{ toYaml .Values.statefulset.ports | indent 8 }}
+{{- end }}
+        volumeMounts:
+        - name: {{ .Values.environment }}-{{ .Values.project }}-{{ .Values.statefulset.volume.aws_ebs_provisioner.type | default (printf "local") }}
+          mountPath: {{ .Values.statefulset.volume.mountPath }}
+{{- if .Values.statefulset.resources }}
+        resources:
+{{ toYaml .Values.statefulset.resources | indent 10 }}
+{{- end }}
+{{- if .Values.statefulset.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.statefulset.livenessProbe | indent 10 }}
+{{- end }}
+{{- if .Values.statefulset.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.statefulset.readinessProbe | indent 10 }}
+{{- end }}
+        
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ .Values.environment }}-{{ .Values.project }}-{{ .Values.statefulset.volume.aws_ebs_provisioner.type | default (printf "local") }}
+    spec:
+      accessModes: {{ .Values.statefulset.volume.accessModes }}
+{{- if .Values.statefulset.volume.aws_ebs_provisioner.enabled }}
+      storageClassName: {{ .Values.environment }}-{{ .Values.project }}-{{ .Values.statefulset.volume.type }}
+{{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.statefulset.volume.storage }}

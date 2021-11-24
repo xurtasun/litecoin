@@ -1,0 +1,22 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.project }}-{{ .Values.role }}-svc
+  namespace: {{ .Values.environment }}-{{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{.Values.project}}-{{.Values.role}}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    service: {{.Values.project}}-{{.Values.role}}
+    environment: {{.Values.environment}}
+    project: {{.Values.project}}
+    role: {{.Values.role}}
+spec:
+  ports:
+{{ toYaml .Values.service.ports | indent 2 }}
+  selector:
+    project: {{.Values.project}}
+    role: {{.Values.role}}
+  type: ClusterIP
+{{- end }}
