@@ -1,0 +1,69 @@
+## environment project role variables
+environment: prod
+project: litecoin
+role: app
+
+## statefut parameters values
+statefulset:
+  replicas: 3
+  # docker image and version
+  image:
+    name: xurtasun/litecoin
+    tag: 0.18.1
+
+  ## setting the terminationGracePeriodSeconds Default 30s
+  terminationGracePeriodSeconds: 30
+
+  ## defining application port
+  ports:
+  - containerPort: &port 9333
+    name: crypto9333
+  ## defining application volume type
+  volume:
+    ## aws-ebs provider if needed
+    aws_ebs_provisioner:
+      enabled: false
+      # type: gp2
+      # fsType: ext4
+      # zone: eu-west-1a
+    accessModes:
+    - "ReadWriteOnce"
+    storage: 100Mi
+    mountPath: /home/litecoin/.litecoin
+  ## Values for Pod Resources 
+  ## These values should probably be different in each environment
+  resources:
+      ## I usually recommend define limits
+    limits:
+      cpu: 100m
+      memory: 200Mi
+    requests:
+      cpu: 50m
+      memory: 200M
+  ## The kubelet uses liveness probes to know when to restart a Container. For example,liveness probes could catch a deadlock, where an application is running, but unable to makeprogress. Restarting a Container in such a state can help to make the application moreavailable despite bugs.
+  ## Do not use it in case your application don't listen to any port.
+  livenessProbe:
+    tcpSocket:
+      port: *port
+    initialDelaySeconds: 1
+    periodSeconds: 30
+    timeoutSeconds: 30
+    successThreshold: 1
+    failureThreshold: 10
+  readinessProbe:
+    tcpSocket:
+      port: *port
+    initialDelaySeconds: 1
+    periodSeconds: 30
+    timeoutSeconds: 30
+    successThreshold: 1
+    failureThreshold: 10
+## Define service to expose application port
+service:
+  enabled: true
+  ports:
+  - port: *port
+    name: crypto9333
+
+
+  
