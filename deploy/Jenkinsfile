@@ -1,0 +1,37 @@
+pipeline {
+    environment {
+        imagename = "xurtasun/litecoin"
+    }
+    agent any
+    stages {
+        stage('Git Clone') {
+            steps {
+                git([url: 'https://github.com/xurtasun/litecoin.git', branch: 'master',])
+            }
+        }
+        stage('CI') {
+            steps{
+                script {
+                    dockerImage = docker.build("${imagename}:${GIT_COMMIT}")
+                    dockerImage.push
+                }
+            }
+        }
+        // Suposing that the agent has the kubectl context of the k8s cluster
+        stage('Deploy') {
+            steps{
+                script {
+                    // Verify k8s chart
+                    sh "helm lint k8s"
+                    // Deploy helm chart to k8s cluster
+                    sh "helm install v1 k8s --set statefulset.image.tag=${GIT_COMMIT}"
+                }
+            }
+        }
+        stage('Remove Unused docker image') {
+            steps{
+                sh "docker rmi $imagename:$GIT_COMMIT"
+            }
+        }
+    }
+}
