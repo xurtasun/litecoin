@@ -1,5 +1,5 @@
 resource "aws_iam_role" "this" {
-  name        = var.name
+  name        = "${var.environment}-${var.name}-role"
   path        = "/"
   description = "${var.name} role"
 
@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "sts_assumerole_policy_document" {
 }
 
 resource "aws_iam_policy" "sts_assumerole_policy" {
-  name        = "sts_assumerole_policy"
+  name        = "${var.environment}-${var.name}-policy"
   path        = "/"
   description = "sts_assumerole_policy"
 
@@ -45,12 +45,12 @@ resource "aws_iam_group_policy_attachment" "this" {
 }
 
 resource "aws_iam_group" "this" {
-  name = var.name
+  name = "${var.environment}-${var.name}-group"
   path = "/"
 }
 
 resource "aws_iam_user" "this" {
-  name = var.name
+  name = "${var.environment}-${var.name}-user"
   path = "/"
 }
 
